@@ -1,18 +1,34 @@
 <template>
   <div id="app">
-    <img src="./assets/logo.png">
-    <HelloWorld/>
+    <!-- <img src="./assets/logo.png"> -->
+    <!-- <HelloWorld/> -->
+    <virtual-scroll
+      v-bind:items="items">
+      <div slot="before-content" class="before-content outside-content"></div>
+      <div slot="after-content" class="after-content outside-content"></div>
+    </virtual-scroll>
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld';
+import VirtualScroll from './components/VirtualScroll';
+const randomString = () => Math.random().toString(36).substring(7);
+const randomInt = () => Math.ceil(Math.random()*100);
+const randomFloat = () => Math.random()*10;
+const items = Array(1000).fill(undefined).map(()=>({
+  col1: randomString(),
+  col2: randomInt(),
+  col3: randomFloat(),
+}));
 
 export default {
   name: 'App',
   components: {
-    HelloWorld,
+    VirtualScroll,
   },
+  data: () => ({
+    items,
+  }),
 };
 </script>
 
@@ -23,6 +39,24 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  margin-top: 60px;
+  width: 800px;
+  height: 600px;
+  margin: 60px auto auto;
+  border: 1px solid black;
+}
+.outside-content {
+  height: 30px;
+  background-color: gray;
+  position: relative;
+  left: 0;
+  right: 0;
+}
+.before-content {
+  top: 0;
+  position: sticky;
+}
+.after-content {
+  bottom: 0;
+  position: sticky;
 }
 </style>
