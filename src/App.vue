@@ -4,8 +4,8 @@
     <!-- <HelloWorld/> -->
     <virtual-scroll
       v-bind:items="items">
-      <div slot="before-content" class="before-content outside-content"></div>
-      <div slot="after-content" class="after-content outside-content"></div>
+      <div slot="before-content" class="outside-content"></div>
+      <div slot="after-content" class="outside-content"></div>
     </virtual-scroll>
   </div>
 </template>
@@ -15,7 +15,7 @@ import VirtualScroll from './components/VirtualScroll';
 const randomString = () => Math.random().toString(36).substring(7);
 const randomInt = () => Math.ceil(Math.random()*100);
 const randomFloat = () => Math.random()*10;
-const items = Array(1000).fill(undefined).map(()=>({
+const items = Array(100).fill(undefined).map(()=>({
   col1: randomString(),
   col2: randomInt(),
   col3: randomFloat(),
@@ -47,16 +47,5 @@ export default {
 .outside-content {
   height: 30px;
   background-color: gray;
-  position: relative;
-  left: 0;
-  right: 0;
-}
-.before-content {
-  top: 0;
-  position: sticky;
-}
-.after-content {
-  bottom: 0;
-  position: sticky;
 }
 </style>
