@@ -15,7 +15,7 @@ import VirtualScroll from './components/VirtualScroll';
 const randomString = () => Math.random().toString(36).substring(7);
 const randomInt = () => Math.ceil(Math.random()*100);
 const randomFloat = () => Math.random()*10;
-const items = Array(1000).fill(undefined).map(()=>({
+const items = Array.apply(null, Array(1000)).map(()=>({
   col1: randomString(),
   col2: randomInt(),
   col3: randomFloat(),

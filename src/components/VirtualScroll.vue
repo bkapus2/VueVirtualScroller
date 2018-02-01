@@ -13,9 +13,9 @@
       class="container"
       v-bind:is="itemsComponent || itemsTag"
       v-bind:style="containerStyle">
+        <!-- v-on-mounted="updateItemHeight(itemIndex)"
+        v-on-updated="updateItemHeight(itemIndex)" -->
       <component
-        v-on-mounted="updateItemHeight(itemIndex)"
-        v-on-updated="updateItemHeight(itemIndex)"
         v-bind:is="itemComponent || itemTag"
         v-for="itemIndex in renderedItemIndexes"
         v-bind:key="itemIndex"
@@ -99,7 +99,7 @@ export default {
       afterContent: {
         height: 0,
       },
-      itemHeights: Array(this.items.length).fill(24),
+      itemHeights: Array.apply(null, Array(this.items.length)).map(_=>20),
       renderFromIndex: 0,
       renderToIndex: 10,
       containerMarginTop: 0,
@@ -152,9 +152,10 @@ export default {
   },
   methods: {
     onScroll() {
+      console.log(new Date().valueOf());
+      this.syncPoitionUpdate();
       const { scrollTop } = this.$el;
       this.virtualScroller.scrollTop = scrollTop;
-      this.syncPoitionUpdate();
       this.updateRenderedItems();
     },
     syncPoitionUpdate() {
@@ -203,8 +204,7 @@ export default {
             renderFromIndex = 0;
           }
           const bufferHeight = itemHeights.slice(renderFromIndex, index).reduce((a,v)=>a+v, 0);
-          console.log(renderFromIndex, index);
-          containerMarginTop = heightAccumulator + beforeContent.height - bufferHeight; // todo: adjust for buffer
+          containerMarginTop = heightAccumulator + beforeContent.height - bufferHeight;
         }
         heightAccumulator+=itemHeights[index];
         if (heightAccumulator >= renderToHeight && renderToIndex === null) {
