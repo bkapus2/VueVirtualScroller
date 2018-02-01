@@ -17,9 +17,9 @@
         v-on-mounted="updateItemHeight(itemIndex)"
         v-on-updated="updateItemHeight(itemIndex)"
         v-bind:is="itemComponent || itemTag"
-        v-for="(item, itemIndex) in items"
+        v-for="itemIndex in renderedItemIndexes"
         v-bind:key="itemIndex"
-        v-bind:item="item"
+        v-bind:item="items[itemIndex]"
         v-bind:item-index="itemIndex">
         <td>
           {{ itemIndex }}
@@ -27,7 +27,7 @@
         <td
           v-for="(itemProperty, itemPropertyIndex) in itemProperties"
           v-bind:key="itemPropertyIndex">
-          {{ item[itemProperty] }}
+          {{ items[itemIndex][itemProperty] }}
         </td>
       </component>
     </component>
@@ -102,6 +102,7 @@ export default {
       itemHeights: Array(this.items.length).fill(24),
       renderFromIndex: 0,
       renderToIndex: 10,
+      containerMarginTop: 0,
     }
   },
   computed: {
@@ -114,9 +115,9 @@ export default {
       }
     },
     containerStyle() {
-      const { beforeContent, afterContent } = this;
+      const { containerMarginTop, afterContent } = this;
       return {
-        marginTop: beforeContent.height + 'px',
+        marginTop: containerMarginTop + 'px',
         marginBottom: afterContent.height + 'px',
       }
     },
@@ -128,12 +129,22 @@ export default {
       const { itemHeights, beforeContent, afterContent } = this;
       let sumItemHeights = 0;
       for (var itemHeight of itemHeights) {
-        sumItemHeights += itemHeights;
+        sumItemHeights += itemHeight;
       }
       return {
         height: ( sumItemHeights + beforeContent.height + afterContent.height ) + 'px',
       }
     },
+    renderedItemIndexes() {
+      const renderedItemIndexes = [];
+      const { renderFromIndex, renderToIndex } = this;
+      let index = renderFromIndex;
+      while(index <= renderToIndex) {
+        renderedItemIndexes.push(index);
+        index++;
+      }
+      return renderedItemIndexes;
+    }
   },
   mounted() {
     this.initializeHeights();
@@ -147,6 +158,7 @@ export default {
       this.updateRenderedItems();
     },
     syncPoitionUpdate() {
+      // todo: should I use request animation frame?
       const { scrollTop } = this.$el;
       this.$refs.beforeContent.style.top = scrollTop + 'px';
       this.$refs.afterContent.style.bottom = (-scrollTop) + 'px';
@@ -171,30 +183,42 @@ export default {
       }
     },
     updateRenderedItems() {
+      // todo: put this behind a debounce
       const { scrollTop } = this.$el;
       const { itemHeights, virtualScroller, beforeContent, afterContent } = this;
       const renderFromHeight = scrollTop + beforeContent.height;
       const renderToHeight = virtualScroller.height + scrollTop
         - beforeContent.height - afterContent.height;
       const itemsLen = this.items.length;
+      const itemBuffer = 2;
       let index = 0;
       let heightAccumulator = 0;
       let renderFromIndex = null;
       let renderToIndex = null;
+      let containerMarginTop = 0;
       while(index < itemsLen) {
-        heightAccumulator+=itemHeights[index];
-        console.log(heightAccumulator)
-        if (heightAccumulator > scrollTop && renderFromIndex === null) {
-          renderFromIndex = index - 1;
+        if (heightAccumulator >= scrollTop && renderFromIndex === null) {
+          renderFromIndex = index - itemBuffer;
+          if (renderFromIndex < 0) {
+            renderFromIndex = 0;
+          }
+          const bufferHeight = itemHeights.slice(renderFromIndex, index).reduce((a,v)=>a+v, 0);
+          console.log(renderFromIndex, index);
+          containerMarginTop = heightAccumulator + beforeContent.height - bufferHeight; // todo: adjust for buffer
         }
-        if (heightAccumulator > renderToHeight && renderToIndex === null) {
-          renderToIndex = index;
+        heightAccumulator+=itemHeights[index];
+        if (heightAccumulator >= renderToHeight && renderToIndex === null) {
+          renderToIndex = index + itemBuffer;
+          if (renderToIndex >= itemsLen -1) {
+            renderToIndex = itemsLen -1;
+          }
           break;
         }
         index++;
       }
-      this.renderFromIndex = renderFromIndex < 0 ? 0 : renderFromIndex;
-      this.renderToIndex = renderToIndex || itemsLen - 1;
+      this.renderFromIndex = renderFromIndex;
+      this.renderToIndex = renderToIndex;
+      this.containerMarginTop = containerMarginTop;
     }
   },
   watch: {
