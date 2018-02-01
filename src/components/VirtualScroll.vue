@@ -1,7 +1,5 @@
 <template>
-  <div
-    class="virtual-scroller"
-    v-on:scroll="onScroll">
+  <div class="virtual-scroller">
     <div
       v-on-mounted="onBeforeContentMounted"
       ref="beforeContent"
@@ -16,15 +14,17 @@
         <!-- v-on-mounted="updateItemHeight(itemIndex)"
         v-on-updated="updateItemHeight(itemIndex)" -->
       <component
+        class="item"
         v-bind:is="itemComponent || itemTag"
         v-for="itemIndex in renderedItemIndexes"
         v-bind:key="itemIndex"
         v-bind:item="items[itemIndex]"
         v-bind:item-index="itemIndex">
-        <td>
+        <td class="item-property">
           {{ itemIndex }}
         </td>
         <td
+          class="item-property"
           v-for="(itemProperty, itemPropertyIndex) in itemProperties"
           v-bind:key="itemPropertyIndex">
           {{ items[itemIndex][itemProperty] }}
@@ -56,6 +56,8 @@ const onUpdated = {
     binding.value(el);
   }
 }
+
+import oncePerRaf from '@/utils/oncePerRaf';
 
 export default {
   props: {
@@ -149,10 +151,14 @@ export default {
   mounted() {
     this.initializeHeights();
     this.updateRenderedItems();
+    this.oncePerRafProcessScroll = oncePerRaf(this.onScroll);
+    this.$el.addEventListener('scroll', this.oncePerRafProcessScroll)
+  },
+  destroyed() {
+    this.$el.removeEventListener('scroll', this.oncePerRafProcessScroll)
   },
   methods: {
     onScroll() {
-      console.log(new Date().valueOf());
       this.syncPoitionUpdate();
       const { scrollTop } = this.$el;
       this.virtualScroller.scrollTop = scrollTop;
@@ -238,6 +244,8 @@ export default {
 }
 .container {
   border-collapse: collapse;
+  table-layout: fixed;
+  width: 100%;
 }
 .before-content {
   position: absolute;
@@ -255,5 +263,12 @@ export default {
   position: absolute;
   width: 100%;
   top: 0px;
+}
+.item {
+  height: 20px;
+}
+.item-property {
+  width: 100px;
+  overflow: hidden;
 }
 </style>

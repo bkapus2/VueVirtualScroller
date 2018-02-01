@@ -1,7 +1,5 @@
 <template>
   <div id="app">
-    <!-- <img src="./assets/logo.png"> -->
-    <!-- <HelloWorld/> -->
     <virtual-scroll
       v-bind:items="items">
       <div slot="before-content" class="outside-content"></div>
@@ -12,6 +10,8 @@
 
 <script>
 import VirtualScroll from './components/VirtualScroll';
+import oncePerRaf from './utils/oncePerRaf';
+window.oncePerRaf = oncePerRaf;
 const randomString = () => Math.random().toString(36).substring(7);
 const randomInt = () => Math.ceil(Math.random()*100);
 const randomFloat = () => Math.random()*10;
