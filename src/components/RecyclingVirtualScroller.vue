@@ -2,7 +2,7 @@
   <div class="recycling-virtual-scroller" @scroll.passive="onScroll">
     <div class="items-container" :style="containerStyle">
       <div class="item-wrapper">
-        <div class="item-view" v-for="view in viewPool" :key="view.id">
+        <div class="item-view" v-for="vm in viewModels" :key="vm.id">
           <component :is="item.component" :item="item"></component>
         </div>
       </div>
@@ -20,41 +20,70 @@ function validateItems(items) {
   return items.some(validateItem)
 }
 
-function findUnusedOfType(type) {
-  return function findFunc(entry) {
-    return entry.type === type && entry.used === false;
+class VmEntry {
+  constructor({ id, index, data, component }) {
+    this.top = 0;
+    this.index = index;
+    this.data = data;
+    Object.defineProperties(this, {
+      id: {
+        value: uid++,
+        configurable: false,
+        writable: false,
+      },
+      inUse: {
+        value: true,
+        configurable: false,
+      },
+      release: {
+        value: function release() {
+          this.inUse = false;
+        },
+        configurable: false,
+        writable: false,
+      },
+      component: {
+        value: component,
+        configurable: false,
+      }
+    });
   }
 }
-function getComponentInstancePool() {
-  const pool = [];
+function findUnusedVm(component) {
+  return function findFunc(entry) {
+    return entry.component === component && !entry.inUse;
+  }
+}
+function releaseVmEntry(vmEntry) {
+  vmEntry.release();
+}
+function inUse(vmEntry) {
+  return vmEntry.inUse
+}
+function createVmPool() {
+  let vmPool = [];
   let uid = 1;
   return {
-    getInstance({type, index, data}) {
-      let entry = pool.find(findUnusedOfType(type));
+    getVm({component, index, data}) {
+      let entry = vmPool.find(findUnusedVm(component));
       if (!entry) {
-        entry = {
+        entry = new VmEntry({
           id: uid++,
-          top: 0,
           index,
           data,
-          used: true
-        }
-      } else {
-        Object.assign(entry, {
-          index,
-          data,
-          used: true
+          component,
         });
       }
       return entry;
     },
-    releaseInstance(entry) {
-      Object.assign(entry, {
-        top: 0,
-        index: null,
-        data: null,
-        used: false,
-      });
+    releaseWhere(func) {
+      vmPool.filter(func).forEach(releaseVmEntry);
+    },
+    releaseAll() {
+      vmPool.forEach(releaseVmEntry);
+    },
+    removeUnused() {
+      vmPool = vmPool.filter(inUse);
     }
   };
 }
@@ -82,13 +111,13 @@ export default {
   },
   data() {
     return {
-      viewPool: [],
-      totalHeight: 1000
+      viewModels: [],
+      totalHeight: 1000,
+      activeRaf: false,
     }
   },
   computed: {
     containerStyle() {
-      console.log('updating container style')
       return {
         height: this.totalHeight+'px',
       }
@@ -101,7 +130,18 @@ export default {
     },
   },
   created() {
-    this.onScroll = oncePerFrame(this.onScroll);
+    // create a viewModel pool
+    this.vmPool = createVmPool();
+
+    // create a oncePerFrame throttle for update functions
+    this.updateVisibleItems = oncePerFrame(this.updateVisibleItems);
+
+    // create non-reactive data
+    this.lastUpdate = {
+      startIndex: 0,
+      endIndex: 0,
+      continuous: true,
+    };
   },
   mounted() {
     this.updateVisibleItems();
@@ -114,16 +154,22 @@ export default {
   },
   methods: {
     onScroll() {
-      console.log(new Date().valueOf())
       this.updateVisibleItems();
     },
     updateVisibleItems() {
       const { startIndex, endIndex, totalHeight } = this.fixedHeightMode
         ? this.getFixedHeightData()
         : this.getVariableHeightData();
-      console.log({ startIndex, endIndex, totalHeight })
 
+      // release out of range view models
+      this.vmPool.releaseWhere(function filterFunc(vm){
+        return vm.index < startIndex || vm.index > endIndex;
+      });
+
+      // update component
       this.totalHeight = totalHeight;
+      this.lastUpdate.startIndex = startIndex;
+      this.lastUpdate.endIndex = endIndex;
     },
     getBounds() {
       const { scrollTop, offsetHeight } = this.$el;
