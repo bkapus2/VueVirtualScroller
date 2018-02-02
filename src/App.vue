@@ -9,9 +9,10 @@
 </template>
 
 <script>
-import VirtualScroll from './components/VirtualScroll';
-import oncePerRaf from './utils/oncePerRaf';
-window.oncePerRaf = oncePerRaf;
+// import VirtualScroll from './components/VirtualScroll';
+import VirtualScroll from './components/RecyclingVirtualScroller';
+import oncePerFrame from './utils/oncePerFrame';
+window.oncePerFrame = oncePerFrame;
 const randomString = () => Math.random().toString(36).substring(7);
 const randomInt = () => Math.ceil(Math.random()*100);
 const randomFloat = () => Math.random()*10;

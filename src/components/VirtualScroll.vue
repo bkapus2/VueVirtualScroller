@@ -57,7 +57,7 @@ const onUpdated = {
   }
 }
 
-import oncePerRaf from '@/utils/oncePerRaf';
+import oncePerFrame from '@/utils/oncePerFrame';
 
 export default {
   props: {
@@ -151,7 +151,7 @@ export default {
   mounted() {
     this.initializeHeights();
     this.updateRenderedItems();
-    this.oncePerRafProcessScroll = oncePerRaf(this.onScroll);
+    this.oncePerRafProcessScroll = oncePerFrame(this.onScroll);
     this.$el.addEventListener('scroll', this.oncePerRafProcessScroll)
   },
   destroyed() {
