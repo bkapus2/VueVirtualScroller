@@ -1,10 +1,8 @@
 <template>
   <div class="recycling-virtual-scroller" @scroll.passive="onScroll">
     <div class="items-container" :style="containerStyle">
-      <div class="item-wrapper">
-        <div class="item-view" v-for="vm in viewModels" :key="vm.id">
-          <component :is="item.component" :item="item"></component>
-        </div>
+      <div class="item-view" v-for="vm in viewModels" :key="vm.id" :style="{ top: vm.top+'px', display: vm.display }">
+        <component :is="vm.component" :item="vm.data" :item-index="vm.index"></component>
       </div>
     </div>
   </div>
@@ -12,6 +10,7 @@
 
 <script>
 import oncePerFrame from '@/utils/oncePerFrame';
+import debounce from '@/utils/debounce';
 
 function validateItem(item) {
   return false;
@@ -161,10 +160,13 @@ export default {
   created() {
     // create a viewModel pool
     this.vmPool = createVmPool();
-    this.pool = this.vmPool.getPool();
+    this.viewModels = this.vmPool.getPool();
 
     // create a oncePerFrame throttle for update functions
     this.updateVisibleItems = oncePerFrame(this.updateVisibleItems);
+
+    // create debounce functions
+    this.cleanPool = debounce(this.cleanPool, { delay: 1000 });
 
     // create non-reactive data
     this.lastUpdate = {
@@ -183,11 +185,13 @@ export default {
     window.console.timeEnd('update');
   },
   methods: {
-    onScroll() {
+    onScroll(e) {
+      console.log(e);
       this.updateVisibleItems();
+      this.cleanPool();
     },
     updateVisibleItems() {
-      console.time('updateVisibleItems');
+      console.time('#updateVisibleItems');
       const { items, vmPool, itemHeight } = this;
       const { startIndex, endIndex, totalHeight } = this.fixedHeightMode
         ? this.getFixedHeightData()
@@ -199,7 +203,7 @@ export default {
       });
 
       // ensure that each visible item has a vm
-      for (var index = startIndex; index <= endIndex; index++) {
+      for (var index = startIndex; index < endIndex; index++) {
         const item = items[index];
         let vm = vmPool.findByIndex(index);
         if (!vm) {
@@ -214,18 +218,20 @@ export default {
         }
       }
 
-      // todo: add this to a debounce throttled to onScroll so that we GC up only during downtime
-      // todo: would modifying the pool in place be faster?
-      this.pool = vmPool.removeUnused();
-
       // update component
       this.totalHeight = totalHeight;
       this.lastUpdate.startIndex = startIndex;
       this.lastUpdate.endIndex = endIndex;
 
-      console.timeEnd('updateVisibleItems');
-      // todo: for development ad a throttle to vmPool.print
-      // vmPool.print();
+      console.timeEnd('#updateVisibleItems');
+    },
+    cleanPool() {
+      console.time('#cleanPool')
+      // todo: would modifying the pool in place be faster?
+      this.vmPool.print();
+      this.viewModels = this.vmPool.removeUnused();
+      this.vmPool.print();
+      console.timeEnd('#cleanPool')
     },
     getBounds() {
       const { scrollTop, offsetHeight } = this.$el;
@@ -252,7 +258,7 @@ export default {
     },
     getVariableHeightData() {
       throw new Error("todo: #getVariableHeightData");
-    }
+    },
   },
 };
 </script>
@@ -263,5 +269,14 @@ export default {
   height: 100%;
   position: relative;
   overflow-y: auto;
+}
+.items-container {
+  top: 0;
+}
+.item-view {
+  position: absolute;
+  left: 0;
+  right: 0;
+  overflow: hidden;
 }
 </style>

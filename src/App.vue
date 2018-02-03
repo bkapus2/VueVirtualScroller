@@ -11,22 +11,13 @@
 <script>
 // import VirtualScroll from './components/VirtualScroll';
 import VirtualScroll from './components/RecyclingVirtualScroller';
-import oncePerFrame from './utils/oncePerFrame';
-window.oncePerFrame = oncePerFrame;
-const randomString = () => Math.random().toString(36).substring(7);
-const randomInt = () => Math.ceil(Math.random()*100);
-const randomFloat = () => Math.random()*10;
-const items = Array.apply(null, Array(1000)).map(function items(_, index){
+import TestDataItem from './components/TestDataItem';
+import rows from './testData/rows';
+const items = rows.map(function mapRow(item, index) {
   return {
-    data: {
-      col0: index,
-      col1: randomString(),
-      col2: randomInt(),
-      col3: randomFloat(),
-      col4: randomFloat(),
-      col5: randomFloat(),
-      col6: randomFloat(),
-    }
+    component: TestDataItem,
+    index,
+    data: item,
   }
 });
 
