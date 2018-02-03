@@ -1,9 +1,8 @@
 <template>
   <div id="app">
+    <div class="header"></div>
     <virtual-scroll
       v-bind:items="items">
-      <div slot="before-content" class="outside-content"></div>
-      <div slot="after-content" class="outside-content"></div>
     </virtual-scroll>
   </div>
 </template>
@@ -44,8 +43,7 @@ export default {
   margin: 60px auto auto;
   border: 1px solid black;
 }
-.outside-content {
-  height: 30px;
-  background-color: gray;
+.header {
+  
 }
 </style>

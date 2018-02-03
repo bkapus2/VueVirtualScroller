@@ -1,119 +1,23 @@
 <template>
   <div class="recycling-virtual-scroller" @scroll.passive="onScroll">
     <div class="items-container" :style="containerStyle">
-      <div class="item-view" v-for="vm in viewModels" :key="vm.id" :style="{ top: vm.top+'px', display: vm.display }">
-        <component :is="vm.component" :item="vm.data" :item-index="vm.index"></component>
+      <div class="item-view" v-for="rowModel in rowModels" :key="rowModel.id" :style="{ top: rowModel.top+'px', display: rowModel.display }">
+        <component :is="rowModel.component" :item="rowModel.data" :item-index="rowModel.index"></component>
       </div>
     </div>
   </div>
 </template>
 
 <script>
-import oncePerFrame from '@/utils/oncePerFrame';
+import rafThrottle from '@/utils/rafThrottle';
 import debounce from '@/utils/debounce';
+import rowModelPool from '@/utils/rowModelPool';
 
 function validateItem(item) {
   return false;
 }
 function validateItems(items) {
   return items.some(validateItem)
-}
-
-class VmEntry {
-  constructor({ id, index, data, component, top }) {
-    this.top = top;
-    this.display = 'block';
-    this.index = index;
-    this.data = data;
-    Object.defineProperties(this, {
-      id: {
-        value: id,
-        configurable: false,
-        writable: false,
-      },
-      inUse: {
-        value: true,
-        configurable: false,
-        writable: true,
-      },
-      release: {
-        value: function release() {
-          this.inUse = false;
-          this.display = 'none';
-        },
-        configurable: false,
-        writable: false,
-      },
-      component: {
-        value: component,
-        configurable: false,
-        writable: false,
-      }
-    });
-  }
-}
-function findUnusedVm(component) {
-  return function findFunc(entry) {
-    return entry.component === component && !entry.inUse;
-  }
-}
-function releaseVmEntry(vmEntry) {
-  vmEntry.release();
-}
-function inUse(vmEntry) {
-  return vmEntry.inUse
-}
-function createVmPool() {
-  let vmPool = [];
-  let uid = 1;
-  const context = {
-    getAvailableVm({component, index, data, top}) {
-      let entry = vmPool.find(findUnusedVm(component));
-      if (!entry) {
-        entry = new VmEntry({
-          id: uid++,
-          index,
-          data,
-          component,
-          top,
-        });
-        vmPool.push(entry);
-      } else {
-        entry.inUse = true;
-        entry.index = index;
-        entry.display = 'block';
-        entry.data = data;
-        entry.top = top;
-      }
-      return entry;
-    },
-    findVm(func) {
-      return vmPool.find(func);
-    },
-    findByIndex(index) {
-      return vmPool.find(function findIndex(vm) {
-        return vm.index === index;
-      })
-    },
-    releaseWhere(func) {
-      vmPool.filter(func).forEach(releaseVmEntry);
-    },
-    releaseAll() {
-      vmPool.forEach(releaseVmEntry);
-    },
-    removeUnused() {
-      vmPool = vmPool.filter(inUse);
-      return vmPool;
-    },
-    getPool() {
-      return vmPool;
-    },
-    // todo: remove after development
-    print() {
-      console.log(vmPool);
-    },
-  };
-  return context;
 }
 
 export default {
@@ -139,7 +43,7 @@ export default {
   },
   data() {
     return {
-      viewModels: [],
+      rowModels: [],
       totalHeight: 1000,
       activeRaf: false,
     }
@@ -159,13 +63,13 @@ export default {
   },
   created() {
     // create a viewModel pool
-    this.vmPool = createVmPool();
-    this.viewModels = this.vmPool.getPool();
+    this.rowModelPool = rowModelPool();
+    this.rowModels = this.rowModelPool.getPool();
 
-    // create a oncePerFrame throttle for update functions
-    this.updateVisibleItems = oncePerFrame(this.updateVisibleItems);
+    // create a rafThrottle throttle for update functions
+    this.updateVisibleItems = rafThrottle(this.updateVisibleItems);
 
-    // create debounce functions
+    // create debounce function
     this.cleanPool = debounce(this.cleanPool, { delay: 1000 });
 
     // create non-reactive data
@@ -186,30 +90,29 @@ export default {
   },
   methods: {
     onScroll(e) {
-      console.log(e);
       this.updateVisibleItems();
       this.cleanPool();
     },
     updateVisibleItems() {
       console.time('#updateVisibleItems');
-      const { items, vmPool, itemHeight } = this;
+      const { items, rowModelPool, itemHeight } = this;
       const { startIndex, endIndex, totalHeight } = this.fixedHeightMode
         ? this.getFixedHeightData()
         : this.getVariableHeightData();
 
       // release out of range view models
-      vmPool.releaseWhere(function filterFunc(vm){
-        return vm.index < startIndex || vm.index > endIndex;
+      rowModelPool.releaseWhere(function filterFunc(rowModel){
+        return rowModel.index < startIndex || rowModel.index > endIndex;
       });
 
-      // ensure that each visible item has a vm
+      // ensure that each visible item has a rowModel
       for (var index = startIndex; index < endIndex; index++) {
         const item = items[index];
-        let vm = vmPool.findByIndex(index);
-        if (!vm) {
+        let rowModel = rowModelPool.findByIndex(index);
+        if (!rowModel) {
           // todo: account for variable height mode
           const top = index * itemHeight;
-          vm = vmPool.getAvailableVm({
+          rowModel = rowModelPool.getAvailableRowModel({
             component: item.component,
             data: item.data,
             index,
@@ -228,9 +131,9 @@ export default {
     cleanPool() {
       console.time('#cleanPool')
       // todo: would modifying the pool in place be faster?
-      this.vmPool.print();
-      this.viewModels = this.vmPool.removeUnused();
-      this.vmPool.print();
+      this.rowModelPool.print();
+      this.rowModels = this.rowModelPool.removeUnused();
+      this.rowModelPool.print();
       console.timeEnd('#cleanPool')
     },
     getBounds() {
