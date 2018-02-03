@@ -21,23 +21,26 @@ function validateItems(items) {
 }
 
 class VmEntry {
-  constructor({ id, index, data, component }) {
-    this.top = 0;
+  constructor({ id, index, data, component, top }) {
+    this.top = top;
+    this.display = 'block';
     this.index = index;
     this.data = data;
     Object.defineProperties(this, {
       id: {
-        value: uid++,
+        value: id,
         configurable: false,
         writable: false,
       },
       inUse: {
         value: true,
         configurable: false,
+        writable: true,
       },
       release: {
         value: function release() {
           this.inUse = false;
+          this.display = 'none';
         },
         configurable: false,
         writable: false,
@@ -45,6 +48,7 @@ class VmEntry {
       component: {
         value: component,
         configurable: false,
+        writable: false,
       }
     });
   }
@@ -63,8 +67,8 @@ function inUse(vmEntry) {
 function createVmPool() {
   let vmPool = [];
   let uid = 1;
-  return {
-    getVm({component, index, data}) {
+  const context = {
+    getAvailableVm({component, index, data, top}) {
       let entry = vmPool.find(findUnusedVm(component));
       if (!entry) {
         entry = new VmEntry({
@@ -72,9 +76,25 @@ function createVmPool() {
           index,
           data,
           component,
+          top,
         });
+        vmPool.push(entry);
+      } else {
+        entry.inUse = true;
+        entry.index = index;
+        entry.display = 'block';
+        entry.data = data;
+        entry.top = top;
       }
       return entry;
+    },
+    findVm(func) {
+      return vmPool.find(func);
+    },
+    findByIndex(index) {
+      return vmPool.find(function findIndex(vm) {
+        return vm.index === index;
+      })
     },
     releaseWhere(func) {
       vmPool.filter(func).forEach(releaseVmEntry);
@@ -84,8 +104,17 @@ function createVmPool() {
     },
     removeUnused() {
       vmPool = vmPool.filter(inUse);
-    }
+      return vmPool;
+    },
+    getPool() {
+      return vmPool;
+    },
+    // todo: remove after development
+    print() {
+      console.log(vmPool);
+    },
   };
+  return context;
 }
 
 export default {
@@ -93,7 +122,7 @@ export default {
     itemHeight: {
       required: false,
       type: Number,
-      default: 20, // todo: change back to null when done developing
+      default: 30, // todo: change back to null when done developing
     },
     items: {
       required: true,
@@ -132,6 +161,7 @@ export default {
   created() {
     // create a viewModel pool
     this.vmPool = createVmPool();
+    this.pool = this.vmPool.getPool();
 
     // create a oncePerFrame throttle for update functions
     this.updateVisibleItems = oncePerFrame(this.updateVisibleItems);
@@ -157,19 +187,45 @@ export default {
       this.updateVisibleItems();
     },
     updateVisibleItems() {
+      console.time('updateVisibleItems');
+      const { items, vmPool, itemHeight } = this;
       const { startIndex, endIndex, totalHeight } = this.fixedHeightMode
         ? this.getFixedHeightData()
         : this.getVariableHeightData();
 
       // release out of range view models
-      this.vmPool.releaseWhere(function filterFunc(vm){
+      vmPool.releaseWhere(function filterFunc(vm){
         return vm.index < startIndex || vm.index > endIndex;
       });
+
+      // ensure that each visible item has a vm
+      for (var index = startIndex; index <= endIndex; index++) {
+        const item = items[index];
+        let vm = vmPool.findByIndex(index);
+        if (!vm) {
+          // todo: account for variable height mode
+          const top = index * itemHeight;
+          vm = vmPool.getAvailableVm({
+            component: item.component,
+            data: item.data,
+            index,
+            top,
+          });
+        }
+      }
+
+      // todo: add this to a debounce throttled to onScroll so that we GC up only during downtime
+      // todo: would modifying the pool in place be faster?
+      this.pool = vmPool.removeUnused();
 
       // update component
       this.totalHeight = totalHeight;
       this.lastUpdate.startIndex = startIndex;
       this.lastUpdate.endIndex = endIndex;
+
+      console.timeEnd('updateVisibleItems');
+      // todo: for development ad a throttle to vmPool.print
+      // vmPool.print();
     },
     getBounds() {
       const { scrollTop, offsetHeight } = this.$el;
