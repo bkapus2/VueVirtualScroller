@@ -45,7 +45,6 @@ export default {
     return {
       rowModels: [],
       totalHeight: 1000,
-      activeRaf: false,
     }
   },
   computed: {
