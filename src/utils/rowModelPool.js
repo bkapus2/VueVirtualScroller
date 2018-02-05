@@ -1,6 +1,8 @@
 class RowModel {
-  constructor({ id, index, data, component, top }) {
+  constructor({ id, index, data, component, top, height }) {
+    this.style = {};
     this.top = top;
+    this.height = height;
     this.display = 'block';
     this.index = index;
     this.data = data;
@@ -30,6 +32,18 @@ class RowModel {
       },
     });
   }
+
+  set top(value) {
+    this.style.top = `${value}px`;
+  }
+
+  set height(value) {
+    this.style.height = `${value}px`;
+  }
+
+  set display(value) {
+    this.style.display = value;
+  }
 }
 
 function findUnusedRowModel(component) {
@@ -50,15 +64,16 @@ function createRowModelPool() {
   let rowModelPool = [];
   let uid = 1;
   const context = {
-    getAvailableRowModel({ component, index, data, top }) {
+    getAvailableRowModel({ component, index, data, top, height }) {
       let rowModel = rowModelPool.find(findUnusedRowModel(component));
       if (!rowModel) {
         rowModel = new RowModel({
-          id: uid++,
+          id: uid++, // eslint-disable-line no-plusplus
           index,
           data,
           component,
           top,
+          height,
         });
         rowModelPool.push(rowModel);
       } else {
@@ -67,6 +82,7 @@ function createRowModelPool() {
         rowModel.display = 'block';
         rowModel.data = data;
         rowModel.top = top;
+        rowModel.height = height;
       }
       return rowModel;
     },
@@ -74,7 +90,7 @@ function createRowModelPool() {
       return rowModelPool.find(func);
     },
     findByIndex(index) {
-      return rowModelPool.find((rowModel) => rowModel.index === index);
+      return rowModelPool.find(rowModel => rowModel.index === index);
     },
     releaseWhere(func) {
       rowModelPool.filter(func).forEach(releaseRowModel);

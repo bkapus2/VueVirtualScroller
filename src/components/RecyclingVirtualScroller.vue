@@ -1,8 +1,17 @@
 <template>
   <div class="recycling-virtual-scroller" @scroll.passive="onScroll">
     <div class="items-container" :style="containerStyle">
-      <div class="item-view" v-for="rowModel in rowModels" :key="rowModel.id" :style="{ top: rowModel.top+'px', display: rowModel.display }">
-        <component :is="rowModel.component" :item="rowModel.data" :item-index="rowModel.index"></component>
+      <div class="item-view" 
+        v-for="rowModel in rowModels" :key="rowModel.id" 
+        :style="rowModel.style">
+        <component :is="rowModel.component" 
+          :item="rowModel.data" 
+          :item-index="rowModel.index">
+        </component>
+        <!-- <slot :is="rowModel.component" 
+          :item="rowModel.data" 
+          :item-index="rowModel.index"> -->
+        </slot>
       </div>
     </div>
   </div>
@@ -113,6 +122,7 @@ export default {
           const top = index * itemHeight;
           rowModel = rowModelPool.getAvailableRowModel({
             component: item.component,
+            height: itemHeight,
             data: item.data,
             index,
             top,

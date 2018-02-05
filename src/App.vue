@@ -3,6 +3,7 @@
     <div class="header"></div>
     <virtual-scroll
       v-bind:items="items">
+      <div slot-scope="data">{{data}}</div>
     </virtual-scroll>
   </div>
 </template>
