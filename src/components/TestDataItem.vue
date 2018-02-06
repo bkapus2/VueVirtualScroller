@@ -1,7 +1,7 @@
 <template>
   <div class="item" :class="{ odd: indexIsOdd }">
     <div v-for="(column, columnIndex) in columns" :key="columnIndex" class="item-prop">
-      {{ item[column.key] }}
+      {{ rowData[column.key] }}
     </div>
   </div>
 </template>
@@ -10,18 +10,18 @@
 import testDataColumns from '@/testData/columns';
 export default {
   props: {
-    item: {
+    rowData: {
       required: true,
       type: Object
     },
-    itemIndex: {
+    rowIndex: {
       required: true,
       type: Number,
     }
   },
   computed: {
     indexIsOdd() {
-      return this.itemIndex % 2 === 1
+      return this.rowIndex % 2 === 1
     }
   },
   data() {

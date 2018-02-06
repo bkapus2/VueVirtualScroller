@@ -3,7 +3,12 @@
     <div class="header"></div>
     <virtual-scroll
       v-bind:items="items">
-      <div slot-scope="data">{{data}}</div>
+      <template slot-scope="{ item, index, component }">
+        <component :is="component"
+          :row-data="item"
+          :row-index="index">
+        </component>
+      </template>
     </virtual-scroll>
   </div>
 </template>
@@ -20,6 +25,7 @@ const items = rows.map(function mapRow(item, index) {
     data: item,
   }
 });
+
 
 export default {
   name: 'App',

@@ -4,13 +4,14 @@
       <div class="item-view" 
         v-for="rowModel in rowModels" :key="rowModel.id" 
         :style="rowModel.style">
-        <component :is="rowModel.component" 
+        <!-- <component :is="rowModel.component" 
           :item="rowModel.data" 
           :item-index="rowModel.index">
-        </component>
-        <!-- <slot :is="rowModel.component" 
+        </component> -->
+        <slot 
           :item="rowModel.data" 
-          :item-index="rowModel.index"> -->
+          :index="rowModel.index"
+          :component="rowModel.component">
         </slot>
       </div>
     </div>
