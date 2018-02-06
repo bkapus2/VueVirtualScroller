@@ -1,14 +1,15 @@
 <template>
   <div id="app">
-    <div class="header"></div>
     <virtual-scroll
       v-bind:items="items">
+      <div class="header" slot="header"></div>
       <template slot-scope="{ item, index, component }">
         <component :is="component"
           :row-data="item"
           :row-index="index">
         </component>
       </template>
+      <div class="footer" slot="footer"></div>
     </virtual-scroll>
   </div>
 </template>
@@ -51,6 +52,14 @@ export default {
   border: 1px solid black;
 }
 .header {
-  
+  z-index: 2;
+  height: 45px;
+  background-color: blue;
+  resize: both;
+}
+.footer {
+  z-index: 2;
+  height: 17px;
+  background-color: blue;
 }
 </style>

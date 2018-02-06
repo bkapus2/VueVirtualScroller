@@ -1,19 +1,21 @@
 <template>
   <div class="recycling-virtual-scroller" @scroll.passive="onScroll">
+    <div class="header" ref="header" v-on-inserted="onHeaderInserted" v-on-resize="onHeaderResize">
+      <slot name="header"></slot>
+    </div>
     <div class="items-container" :style="containerStyle">
       <div class="item-view" 
         v-for="rowModel in rowModels" :key="rowModel.id" 
         :style="rowModel.style">
-        <!-- <component :is="rowModel.component" 
-          :item="rowModel.data" 
-          :item-index="rowModel.index">
-        </component> -->
         <slot 
           :item="rowModel.data" 
           :index="rowModel.index"
           :component="rowModel.component">
         </slot>
       </div>
+    </div>
+    <div class="footer" ref="footer" v-on-inserted="onFooterInserted" v-on-resize="onFooterResize">
+      <slot name="footer"></slot>
     </div>
   </div>
 </template>
@@ -23,6 +25,28 @@ import rafThrottle from '@/utils/rafThrottle';
 import debounce from '@/utils/debounce';
 import rowModelPool from '@/utils/rowModelPool';
 
+
+const onResize = {
+  inserted(el, binding, vnode, oldVnode) {
+    console.log(this, el, binding, vnode)
+    // todo: find a better way to store this
+    vnode.data.observer = new MutationObserver(mutations => {
+      // console.log(mutations);
+    });
+    vnode.data.observer.observe(el, { attributes: true, characterData: true });
+  },
+  unbind(el, binding, vnode, oldVnode) {
+    vnode.data.observer.disconnect();
+  }
+}
+
+const onInserted = {
+  inserted(el, binding, vnode, oldVnode) {
+    const { value } = binding;
+    value();
+  },
+}
+
 function validateItem(item) {
   return false;
 }
@@ -31,6 +55,10 @@ function validateItems(items) {
 }
 
 export default {
+  directives: {
+    onResize,
+    onInserted
+  },
   props: {
     itemHeight: {
       required: false,
@@ -99,6 +127,8 @@ export default {
   },
   methods: {
     onScroll(e) {
+      this.$refs.header.style.top = this.$el.scrollTop + 'px';
+      this.$refs.footer.style.bottom = (-this.$el.scrollTop) + 'px';
       this.updateVisibleItems();
       this.cleanPool();
     },
@@ -156,8 +186,8 @@ export default {
     getFixedHeightData() {
       const buffer = this.buffer;
       const bounds = this.getBounds();
-      const topBoundary = bounds.top - buffer;
-      const bottomBoundary = bounds.bottom + buffer;
+      const topBoundary = bounds.top - buffer; // todo: account for beforeContent
+      const bottomBoundary = bounds.bottom + buffer; // todo: account for afterContent
       const items = this.items;
       const length = items.length;
       const itemHeight = this.itemHeight;
@@ -172,6 +202,18 @@ export default {
     getVariableHeightData() {
       throw new Error("todo: #getVariableHeightData");
     },
+    onHeaderResize(...args) {
+      console.log(this, ...args)
+    },
+    onFooterResize(...args) {
+      console.log(this, ...args);
+    },
+    onHeaderInserted(...args) {
+      console.log(this, ...args);
+    },
+    onFooterInserted(...args) {
+      console.log(this, ...args);
+    },
   },
 };
 </script>
@@ -184,12 +226,28 @@ export default {
   overflow-y: auto;
 }
 .items-container {
+  position: absolute;
   top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
 }
 .item-view {
   position: absolute;
   left: 0;
   right: 0;
   overflow: hidden;
+}
+.header {
+  top: 0;
+  left: 0;
+  right: 0;
+  position: absolute;
+}
+.footer {
+  bottom: 0;
+  left: 0;
+  right: 0;
+  position: absolute;
 }
 </style>
