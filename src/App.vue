@@ -14,8 +14,7 @@
 </template>
 
 <script>
-// import VirtualScroll from './components/VirtualScroll';
-import VirtualScroll from './components/RecyclingVirtualScroller';
+import VirtualScroll from './components/VirtualScroll';
 import DataItem from './components/DataItem';
 import OtherDataItem from './components/OtherDataItem';
 import rows from './testData/rows';
