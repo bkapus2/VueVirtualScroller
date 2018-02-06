@@ -16,11 +16,12 @@
 <script>
 // import VirtualScroll from './components/VirtualScroll';
 import VirtualScroll from './components/RecyclingVirtualScroller';
-import TestDataItem from './components/TestDataItem';
+import DataItem from './components/DataItem';
+import OtherDataItem from './components/OtherDataItem';
 import rows from './testData/rows';
 const items = rows.map(function mapRow(item, index) {
   return {
-    component: TestDataItem,
+    component: index % 10 === 0 ? OtherDataItem : DataItem,
     index,
     data: item,
   }
