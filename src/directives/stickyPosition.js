@@ -47,7 +47,8 @@ function bindUnsticky(el, binding) {
     }
   }
 
-  const listener = rafThrottle(updatePosition);
+  // const listener = rafThrottle(updatePosition);
+  const listener = updatePosition;
   parent.addEventListener('scroll', listener);
   binding.unbindListener = function unbindListener() {
     parent.removeEventListener('scroll', listener);
