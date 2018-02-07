@@ -11,7 +11,7 @@
           :row-index="index">
         </component>
       </template>
-      <div class="footer" slot="footer"></div>
+      <div class="foot" slot="footer"></div>
     </virtual-scroll>
   </div>
 </template>
@@ -65,7 +65,7 @@ export default {
   display: flex;
   justify-content: space-around;
 }
-.footer {
+.foot {
   z-index: 2;
   height: 17px;
   background-color: white;

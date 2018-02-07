@@ -66,9 +66,9 @@ const stickyPosition = {
       bindUnsticky(el, binding);
     }
   },
-  unbind() {
+  unbind(el, binding) {
     if (!isStickySupported) {
-      throw new Error('todo: finish sticky position vue directie');
+      binding.unbindListener();
     }
   },
 };
