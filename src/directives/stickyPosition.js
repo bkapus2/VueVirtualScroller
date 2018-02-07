@@ -1,5 +1,4 @@
 import isStickySupported from '@/utils/isStickySupported';
-import rafThrottle from '@/utils/rafThrottle';
 
 function bindSticky(el, binding) {
   const { modifiers } = binding;

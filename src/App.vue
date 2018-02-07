@@ -37,10 +37,10 @@ export default {
   },
   data: () => ({
     items,
-    showHeader: true,
+    showHeader: false,
   }),
   created() {
-    // setTimeout(()=>{this.showHeader=!this.showHeader}, 1000)
+    setTimeout(()=>{this.showHeader=!this.showHeader}, 1000)
   }
 };
 </script>

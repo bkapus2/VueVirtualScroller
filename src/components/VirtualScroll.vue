@@ -47,7 +47,7 @@ const onResize = {
       const newHeight = el.offsetHeight;
       const newWidth = el.offsetWidth;
       const heightChange = newHeight !== height;
-      const widthChange = newWidth !== width
+      const widthChange = newWidth !== width;
       if (heightChange || widthChange) {
         vlaue({
           oldHeight: height,
@@ -69,10 +69,17 @@ const onResize = {
 }
 
 const onInserted = {
-  inserted(el, binding, vnode, oldVnode) {
+  inserted(el, binding) {
     const { value } = binding;
     value();
   },
+  unbind(el, binding) {
+    const { modifiers, value } = binding;
+    const { andOnRemove=false } = modifiers;
+    if(andOnRemove) {
+      value();
+    }
+  }
 }
 
 function validateItem(item) {
@@ -102,7 +109,7 @@ export default {
     buffer: {
       required: false,
       type: Number,
-      default: 100,
+      default: 300,
       validator(buffer) {
         return buffer > 0;
       }

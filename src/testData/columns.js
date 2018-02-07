@@ -4,35 +4,28 @@ const randomString = () => Math.random().toString(36).substring(7);
 const randomInt = () => Math.ceil(Math.random() * 100);
 const randomFloat = () => Math.random() * 10;
 
-export default [
+const rngFuncs = [randomString, randomInt, randomFloat];
+const getRngFunc = () => rngFuncs[Math.floor(Math.random(3))];
+
+const title = str => str[0].toUpperCase() + str.slice(1);
+
+const columns = [
   {
     title: 'ID',
-    key: 'id',
     generateCellData() {
       const id = uid;
       uid += 1;
       return id;
     },
   },
-  {
-    title: 'Col 1',
-    key: 'col1',
-    generateCellData() {
-      return randomString();
-    },
-  },
-  {
-    title: 'Col 2',
-    key: 'col2',
-    generateCellData() {
-      return randomInt();
-    },
-  },
-  {
-    title: 'Col 3',
-    key: 'col3',
-    generateCellData() {
-      return randomFloat();
-    },
-  },
 ];
+const nRandomColumns = 20;
+for (let index = 0; index < nRandomColumns; index++) {
+  columns.push({
+    title: title(randomString()),
+    generateCellData: getRngFunc(),
+    key: index,
+  });
+}
+
+export default columns;
