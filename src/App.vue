@@ -2,7 +2,9 @@
   <div id="app">
     <virtual-scroll
       v-bind:items="items">
-      <div v-if="showHeader" class="header" slot="header"></div>
+      <div v-if="showHeader" class="head" slot="header">
+        <span>HEADER</span>
+      </div>
       <template slot-scope="{ item, index, component }">
         <component :is="component"
           :row-data="item"
@@ -35,10 +37,10 @@ export default {
   },
   data: () => ({
     items,
-    showHeader: false,
+    showHeader: true,
   }),
   created() {
-    setTimeout(()=>{this.showHeader=!this.showHeader}, 1000)
+    // setTimeout(()=>{this.showHeader=!this.showHeader}, 1000)
   }
 };
 </script>
@@ -55,16 +57,20 @@ export default {
   margin: 60px auto auto;
   border: 1px solid black;
 }
-.header {
+.head {
   z-index: 2;
   height: 45px;
   background-color: white;
   border-bottom: 1px solid gray;
+  display: flex;
+  justify-content: space-around;
 }
 .footer {
   z-index: 2;
   height: 17px;
   background-color: white;
   border-top: 1px solid gray;
+  display: flex;
+  justify-content: space-around;
 }
 </style>

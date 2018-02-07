@@ -63,7 +63,7 @@ const onResize = {
     });
     binding.observer.observe(el, { attributes: true, characterData: true });
   },
-  unbind(el, binding, vnode, oldVnode) {
+  unbind(el, binding) {
     binding.observer.disconnect();
   }
 }
@@ -280,14 +280,8 @@ export default {
   right: 0;
   overflow: hidden;
 }
-.header {
-  left: 0;
-  right: 0;
-  position: absolute;
-}
-.footer {
-  left: 0;
-  right: 0;
-  position: absolute;
+.header, .footer {
+  width: 100%;
+  z-index: 2;
 }
 </style>
