@@ -1,7 +1,7 @@
 import columns from './columns';
 
 const rows = [];
-let nRows = 10000;
+let nRows = 1000;
 function colReduceFn(acc, col) {
   acc[col.key] = col.generateCellData();
   return acc;

@@ -2,7 +2,7 @@
   <div id="app">
     <virtual-scroll
       v-bind:items="items">
-      <div class="header" slot="header"></div>
+      <div v-if="showHeader" class="header" slot="header"></div>
       <template slot-scope="{ item, index, component }">
         <component :is="component"
           :row-data="item"
@@ -35,7 +35,11 @@ export default {
   },
   data: () => ({
     items,
+    showHeader: false,
   }),
+  created() {
+    setTimeout(()=>{this.showHeader=!this.showHeader}, 1000)
+  }
 };
 </script>
 
@@ -54,12 +58,13 @@ export default {
 .header {
   z-index: 2;
   height: 45px;
-  background-color: blue;
-  resize: both;
+  background-color: white;
+  border-bottom: 1px solid gray;
 }
 .footer {
   z-index: 2;
   height: 17px;
-  background-color: blue;
+  background-color: white;
+  border-top: 1px solid gray;
 }
 </style>

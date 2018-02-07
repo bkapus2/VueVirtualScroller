@@ -1,6 +1,11 @@
 <template>
   <div class="recycling-virtual-scroller" @scroll.passive="onScroll">
-    <div class="header" ref="header" v-on-inserted="onHeaderInserted" v-on-resize="onHeaderResize">
+    <div class="header"
+      ref="header"
+      v-if="$slots.header"
+      v-on-inserted="onHeaderInserted"
+      v-on-resize="onHeaderResize"
+      v-sticky-position.top>
       <slot name="header"></slot>
     </div>
     <div class="items-container" :style="containerStyle">
@@ -14,7 +19,12 @@
         </slot>
       </div>
     </div>
-    <div class="footer" ref="footer" v-on-inserted="onFooterInserted" v-on-resize="onFooterResize">
+    <div class="footer"
+      ref="footer"
+      v-if="$slots.footer"
+      v-on-inserted="onFooterInserted"
+      v-on-resize="onFooterResize"
+      v-sticky-position.bottom>
       <slot name="footer"></slot>
     </div>
   </div>
@@ -25,18 +35,36 @@ import rafThrottle from '@/utils/rafThrottle';
 import debounce from '@/utils/debounce';
 import rowModelPool from '@/utils/rowModelPool';
 
+import stickyPosition from '@/directives/stickyPosition';
 
 const onResize = {
-  inserted(el, binding, vnode, oldVnode) {
-    console.log(this, el, binding, vnode)
+  inserted(el, binding) {
+    let height = el.offsetHeight;
+    let width = el.offsetWidth;
+    const { value } = binding;
     // todo: find a better way to store this
-    vnode.data.observer = new MutationObserver(mutations => {
-      // console.log(mutations);
+    binding.observer = new MutationObserver(mutations => {
+      const newHeight = el.offsetHeight;
+      const newWidth = el.offsetWidth;
+      const heightChange = newHeight !== height;
+      const widthChange = newWidth !== width
+      if (heightChange || widthChange) {
+        vlaue({
+          oldHeight: height,
+          oldWidth: width,
+          newHeight,
+          newWidth,
+          heightChange,
+          widthChange,
+        });
+        height = newHeight;
+        width = newWidth;
+      }
     });
-    vnode.data.observer.observe(el, { attributes: true, characterData: true });
+    binding.observer.observe(el, { attributes: true, characterData: true });
   },
   unbind(el, binding, vnode, oldVnode) {
-    vnode.data.observer.disconnect();
+    binding.observer.disconnect();
   }
 }
 
@@ -57,7 +85,8 @@ function validateItems(items) {
 export default {
   directives: {
     onResize,
-    onInserted
+    onInserted,
+    stickyPosition,
   },
   props: {
     itemHeight: {
@@ -83,6 +112,8 @@ export default {
     return {
       rowModels: [],
       totalHeight: 1000,
+      topOffset: 0,
+      bottomOffset: 0,
     }
   },
   computed: {
@@ -127,14 +158,12 @@ export default {
   },
   methods: {
     onScroll(e) {
-      this.$refs.header.style.top = this.$el.scrollTop + 'px';
-      this.$refs.footer.style.bottom = (-this.$el.scrollTop) + 'px';
       this.updateVisibleItems();
       this.cleanPool();
     },
     updateVisibleItems() {
       console.time('#updateVisibleItems');
-      const { items, rowModelPool, itemHeight } = this;
+      const { items, rowModelPool, itemHeight, topOffset } = this;
       const { startIndex, endIndex, totalHeight } = this.fixedHeightMode
         ? this.getFixedHeightData()
         : this.getVariableHeightData();
@@ -148,9 +177,9 @@ export default {
       for (var index = startIndex; index < endIndex; index++) {
         const item = items[index];
         let rowModel = rowModelPool.findByIndex(index);
+        // todo: account for variable height mode
+        const top = index * itemHeight + topOffset;
         if (!rowModel) {
-          // todo: account for variable height mode
-          const top = index * itemHeight;
           rowModel = rowModelPool.getAvailableRowModel({
             component: item.component,
             height: itemHeight,
@@ -158,6 +187,8 @@ export default {
             index,
             top,
           });
+        } else {
+          rowModel.top = top;
         }
       }
 
@@ -178,12 +209,14 @@ export default {
     },
     getBounds() {
       const { scrollTop, offsetHeight } = this.$el;
+      const { topOffset, bottomOffset } = this;
       return {
-        top: scrollTop,
-        bottom: scrollTop + offsetHeight,
+        top: scrollTop + topOffset,
+        bottom: scrollTop + topOffset + offsetHeight + bottomOffset,
       };
     },
     getFixedHeightData() {
+      const { topOffset, bottomOffset } = this;
       const buffer = this.buffer;
       const bounds = this.getBounds();
       const topBoundary = bounds.top - buffer; // todo: account for beforeContent
@@ -196,23 +229,32 @@ export default {
       return {
         startIndex: startIndex < 0 ? 0 : startIndex,
         endIndex: endIndex > length ? length : endIndex,
-        totalHeight: items.length * itemHeight,
+        totalHeight: topOffset + items.length * itemHeight + bottomOffset,
       };
     },
     getVariableHeightData() {
       throw new Error("todo: #getVariableHeightData");
     },
-    onHeaderResize(...args) {
-      console.log(this, ...args)
+    onHeaderInserted() {
+      this.topOffset = this.$refs.header.offsetHeight;
+      this.updateVisibleItems();
     },
-    onFooterResize(...args) {
-      console.log(this, ...args);
+    onFooterInserted() {
+      this.bottomOffset = this.$refs.footer.offsetHeight;
+      this.updateVisibleItems();
     },
-    onHeaderInserted(...args) {
-      console.log(this, ...args);
+    onHeaderResize({ heightChange, newHeight }) {
+      console.log(heightChange)
+      if (heightChange) {
+        this.topOffset = newHeight;
+        this.updateVisibleItems();
+      }
     },
-    onFooterInserted(...args) {
-      console.log(this, ...args);
+    onFooterResize({ heightChange, newHeight }) {
+      if (heightChange) {
+        this.bottomOffset = newHeight;
+        this.updateVisibleItems();
+      }
     },
   },
 };
@@ -239,13 +281,11 @@ export default {
   overflow: hidden;
 }
 .header {
-  top: 0;
   left: 0;
   right: 0;
   position: absolute;
 }
 .footer {
-  bottom: 0;
   left: 0;
   right: 0;
   position: absolute;
