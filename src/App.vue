@@ -3,8 +3,8 @@
     <component-display name="Header Component" width="800">
       <div>TODO</div>
     </component-display>
-    <component-display name="Row Component" width="800">
-      <div>TODO</div>
+    <component-display name="Row Component" width="800" height="30">
+      <data-row :row="items[0].data" :columns="columns"></data-row>
     </component-display>
     <component-display name="Footer Component" width="800">
       <div>TODO</div>
@@ -32,8 +32,10 @@ import VirtualScroll from '@/components/VirtualScroll';
 import DataItem from '@/components/DataItem';
 import OtherDataItem from '@/components/OtherDataItem';
 import ComponentDisplay from '@/components/ComponentDisplay';
+import DataRow from '@/components/DataRow';
 
-import rows from './testData/rows';
+import rows from '@/testData/rows';
+import columns from '@/testData/columns';
 const items = rows.map(function mapRow(item, index) {
   return {
     component: index % 10 === 0 ? OtherDataItem : DataItem,
@@ -46,10 +48,12 @@ const items = rows.map(function mapRow(item, index) {
 export default {
   name: 'App',
   components: {
-    VirtualScroll,
     ComponentDisplay,
+    DataRow,
+    VirtualScroll,
   },
   data: () => ({
+    columns,
     items,
     showHeader: false,
   }),

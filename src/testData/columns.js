@@ -12,6 +12,7 @@ const title = str => str[0].toUpperCase() + str.slice(1);
 const columns = [
   {
     title: 'ID',
+    key: 'id',
     generateCellData() {
       const id = uid;
       uid += 1;
