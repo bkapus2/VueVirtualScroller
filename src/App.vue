@@ -1,25 +1,38 @@
 <template>
   <div id="app">
-    <virtual-scroll
-      v-bind:items="items">
-      <div v-if="showHeader" class="head" slot="header">
-        <span>HEADER</span>
-      </div>
-      <template slot-scope="{ item, index, component }">
-        <component :is="component"
-          :row-data="item"
-          :row-index="index">
-        </component>
-      </template>
-      <div class="foot" slot="footer"></div>
-    </virtual-scroll>
+    <component-display name="Header Component" width="800">
+      <div>TODO</div>
+    </component-display>
+    <component-display name="Row Component" width="800">
+      <div>TODO</div>
+    </component-display>
+    <component-display name="Footer Component" width="800">
+      <div>TODO</div>
+    </component-display>
+    <component-display name="Virtual Scroll" width="800" height="600">
+      <virtual-scroll
+        v-bind:items="items">
+        <div v-if="showHeader" class="head" slot="header">
+          <span>HEADER</span>
+        </div>
+        <template slot-scope="{ item, index, component }">
+          <component :is="component"
+            :row-data="item"
+            :row-index="index">
+          </component>
+        </template>
+        <div class="foot" slot="footer"></div>
+      </virtual-scroll>
+    </component-display>
   </div>
 </template>
 
 <script>
-import VirtualScroll from './components/VirtualScroll';
-import DataItem from './components/DataItem';
-import OtherDataItem from './components/OtherDataItem';
+import VirtualScroll from '@/components/VirtualScroll';
+import DataItem from '@/components/DataItem';
+import OtherDataItem from '@/components/OtherDataItem';
+import ComponentDisplay from '@/components/ComponentDisplay';
+
 import rows from './testData/rows';
 const items = rows.map(function mapRow(item, index) {
   return {
@@ -34,6 +47,7 @@ export default {
   name: 'App',
   components: {
     VirtualScroll,
+    ComponentDisplay,
   },
   data: () => ({
     items,
@@ -52,10 +66,7 @@ export default {
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
   color: #2c3e50;
-  width: 800px;
-  height: 600px;
   margin: 60px auto auto;
-  border: 1px solid black;
 }
 .head {
   z-index: 2;

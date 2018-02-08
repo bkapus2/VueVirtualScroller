@@ -37,7 +37,8 @@ export default {
 .item-prop {
   display: inline-block;
   padding: 8px;
-  width: 200px;
-  height: 30px;
+  min-width: 100px;
+  max-width: 100px;
+  text-align: left;
 }
 </style>
