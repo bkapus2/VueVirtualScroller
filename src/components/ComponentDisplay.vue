@@ -1,8 +1,10 @@
 <template>
   <div>
     <div class="title">{{name}}</div>
-    <div class="display" :style="displayStyle">
-      <slot></slot>
+    <div class="window" :style="displayStyle">
+      <div class="display">
+        <slot></slot>
+      </div>
     </div>
   </div>
 </template>
@@ -42,8 +44,18 @@ export default {
   padding: 4px 8px;
   font-weight: bold;
 }
-.display {
+.window {
   border: 1px solid darkslategray;
   margin: 10px auto;
+  overflow: auto;
+  resize: both;
+  padding: 10px;
+  background-color: lightsteelblue;
+}
+.display {
+  border: 1px dotted darkslategray;
+  height: 100%;
+  box-sizing: border-box;
+  background-color: white;
 }
 </style>

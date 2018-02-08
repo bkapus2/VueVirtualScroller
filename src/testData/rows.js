@@ -6,4 +6,4 @@ const colReduceFn = (acc, col) => {
 };
 const createRow = () => columns.reduce(colReduceFn, {});
 
-export default Array(100).map(createRow);
+export default Array(10000).fill().map(createRow);

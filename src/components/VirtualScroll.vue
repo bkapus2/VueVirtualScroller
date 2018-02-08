@@ -1,5 +1,5 @@
 <template>
-  <div class="recycling-virtual-scroller" @scroll.passive="onScroll">
+  <div class="recycling-virtual-scroller" @scroll.passive="onScroll" v-on-resize="onScrollerResize">
     <div class="header"
       ref="header"
       v-if="$slots.header"
@@ -44,6 +44,7 @@ const onResize = {
     const { value } = binding;
     // todo: find a better way to store this
     binding.observer = new MutationObserver(mutations => {
+      console.log(mutations);
       const newHeight = el.offsetHeight;
       const newWidth = el.offsetWidth;
       const heightChange = newHeight !== height;
@@ -109,7 +110,7 @@ export default {
     buffer: {
       required: false,
       type: Number,
-      default: 300,
+      default: 50,
       validator(buffer) {
         return buffer > 0;
       }
@@ -241,6 +242,9 @@ export default {
     },
     getVariableHeightData() {
       throw new Error("todo: #getVariableHeightData");
+    },
+    onScrollerResize() {
+      this.updateVisibleItems();
     },
     onHeaderInserted() {
       this.topOffset = this.$refs.header.offsetHeight;

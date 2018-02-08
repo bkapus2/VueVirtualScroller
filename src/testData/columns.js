@@ -19,13 +19,15 @@ const idColumn = {
   },
 };
 
-const columns = Array(5).reduce((acc, val, index) => {
-  acc.push({
-    key: index,
-    title: title(randomString()),
-    generateCellData: getRngFunc(),
-  });
-  return acc;
-}, [idColumn]);
+const createColumn = index => ({
+  key: index,
+  title: title(randomString()),
+  generateCellData: getRngFunc(),
+});
 
-export default columns;
+const createColumnReducer = (acc, val, index) => {
+  acc.push(createColumn(index));
+  return acc;
+};
+
+export default Array(10).fill().reduce(createColumnReducer, [idColumn]);
