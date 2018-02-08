@@ -58,7 +58,7 @@ function bindUnsticky(el, binding) {
 
 const stickyPosition = {
   inserted(el, binding) {
-    if (!isStickySupported) {
+    if (isStickySupported) {
       el.style.position = 'sticky';
       bindSticky(el, binding);
     } else {
@@ -67,7 +67,7 @@ const stickyPosition = {
     }
   },
   unbind(el, binding) {
-    if (!isStickySupported) {
+    if (isStickySupported) {
       binding.unbindListener();
     }
   },

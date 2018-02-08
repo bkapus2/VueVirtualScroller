@@ -1,13 +1,9 @@
 import columns from './columns';
 
-const rows = [];
-let nRows = 1000;
-function colReduceFn(acc, col) {
+const colReduceFn = (acc, col) => {
   acc[col.key] = col.generateCellData();
   return acc;
-}
-while (nRows--) { // eslint-disable-line no-plusplus
-  rows.push(columns.reduce(colReduceFn, {}));
-}
+};
+const createRow = () => columns.reduce(colReduceFn, {});
 
-export default rows;
+export default Array(100).map(createRow);

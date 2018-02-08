@@ -34,7 +34,8 @@ export default {
     rowStyle() {
       const { rowWidth, columns, defaultCellWidth } = this;
       return {
-        width: (rowWidth || columns.length * defaultCellWidth) +'px', //todo: this should be a given prop
+        //todo: this should be a given prop
+        width: (rowWidth || columns.length * defaultCellWidth) +'px',
       };
     }
   }

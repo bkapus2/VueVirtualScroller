@@ -9,24 +9,23 @@ const getRngFunc = () => rngFuncs[Math.floor(Math.random(3))];
 
 const title = str => str[0].toUpperCase() + str.slice(1);
 
-const columns = [
-  {
-    title: 'ID',
-    key: 'id',
-    generateCellData() {
-      const id = uid;
-      uid += 1;
-      return id;
-    },
+const idColumn = {
+  title: 'ID',
+  key: 'id',
+  generateCellData() {
+    const id = uid;
+    uid += 1;
+    return id;
   },
-];
-const nRandomColumns = 20;
-for (let index = 0; index < nRandomColumns; index++) {
-  columns.push({
+};
+
+const columns = Array(5).reduce((acc, val, index) => {
+  acc.push({
+    key: index,
     title: title(randomString()),
     generateCellData: getRngFunc(),
-    key: index,
   });
-}
+  return acc;
+}, [idColumn]);
 
 export default columns;
